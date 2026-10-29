@@ -1,0 +1,71 @@
+services:
+  - type: web
+    name: nextwave-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    preDeployCommand: alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nextwave-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        fromService:
+          name: nextwave-web
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: PUBLIC_APP_URL
+        fromService:
+          name: nextwave-web
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: ADMIN_API_KEY
+        sync: false
+      - key: EMAIL_PROVIDER
+        value: smtp
+      - key: EMAIL_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: WORKSHOP_MEETING_URL
+        sync: false
+      - key: WORKSHOP_CHECK_IN_SECRET
+        sync: false
+
+  - type: web
+    name: nextwave-web
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          name: nextwave-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: nextwave-db
+    plan: free
+    region: singapore
+    databaseName: aiquest
+    user: aiquest

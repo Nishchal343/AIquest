@@ -1,0 +1,12 @@
+import { useEffect, useState } from 'react';
+import { getPublicResource } from '../services/api';
+import { Shell } from './StudentPages';
+
+const AGENDA = [['0–5', 'Introduction and project idea'], ['5–10', 'Choosing AI tools and planning the app'], ['10–25', 'Building the first working version'], ['25–40', 'Adding functionality and integrating AI'], ['40–50', 'Testing, debugging, and refining'], ['50–60', 'Demonstrations, Q&A, and next steps']];
+
+export default function WorkshopScreen({ navigate }) {
+  const [workshop, setWorkshop] = useState(null);
+  useEffect(() => { getPublicResource('workshop').then(setWorkshop).catch(() => setWorkshop({ status: 'not_configured' })); }, []);
+  const meetingUrl = workshop?.meeting_url;
+  return <Shell navigate={navigate} active="workshop"><section className="content-wrap"><div className="workshop-hero"><span className="eyebrow">DAY 2 · AI QUEST WORKSHOP</span><h1>{workshop?.title ?? 'Build Your First AI Project'}<br /><span>in 60 Minutes.</span></h1><p>{workshop?.description ?? 'The core learning event for this campaign. The schedule and access details will be configured by the organiser.'}</p><div className="workshop-status"><span className="status-pill">{meetingUrl ? 'LINK READY' : 'LINK NOT ANNOUNCED'}</span><strong>{meetingUrl ? 'Your workshop link is ready' : 'Workshop link will be announced'}</strong><small>{meetingUrl ? 'Joining does not mark attendance. Attendance requires an authorized verification mechanism.' : 'No meeting URL is configured yet. Clicking join cannot mark attendance or award XP.'}</small></div></div><div className="workshop-grid"><section className="panel"><span className="eyebrow">AGENDA</span><h2>From idea to first working version.</h2>{AGENDA.map(([time, title]) => <div className="agenda-row" key={time}><span>{time} min</span><strong>{title}</strong></div>)}</section><section className="panel workshop-side"><span className="eyebrow">PREPARE</span><h2>Bring a problem worth solving.</h2><ul><li>Think of one repetitive or frustrating task.</li><li>Bring access to your preferred AI tool.</li><li>Keep a notebook for ideas and prompts.</li></ul>{meetingUrl ? <a className="student-button" href={meetingUrl} target="_blank" rel="noreferrer">Join workshop <span>↗</span></a> : <button className="student-button student-button--disabled" disabled>Join workshop · link pending</button>}<button className="link-button" onClick={() => navigate('/dashboard')}>← Back to dashboard</button></section></div></section></Shell>;
+}
